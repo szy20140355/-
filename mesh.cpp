@@ -50,6 +50,8 @@ InsertInfo Face::insertRay(Ray3 ray)
 	}
 	if(cnt & 1) 
 	{
+		if(ret.normal.dir.dot(plane.normal.dir) < 0) 
+			ret.inside = true;
 		return ret;
 	}
 	return InsertInfo(false);
@@ -81,7 +83,7 @@ void ParalleBox::update(const ParalleBox &box)
 	max_coord.y = max(max_coord.y, box.max_coord.y);
 	max_coord.z = max(max_coord.z, box.max_coord.z);
 }
-bool ParalleBox::insertRay(Ray3 ray)
+bool ParalleBox::insertRay(Ray3 ray, InsertInfo &info)
 {
 	double t_min = -inf, t_max = inf;
 	for(int i = 0; i < 3; i++)
@@ -90,6 +92,7 @@ bool ParalleBox::insertRay(Ray3 ray)
 		t_max = min(t_max, (max_coord.getDim(i) - ray.start.getDim(i)) / (ray.dir.getDim(i)));
 	}
 	if(t_min >= t_max || t_max < 0) return false;
+	if(info.insert && info.distance(ray.start) < t_min) return false;
 	return true;
 }
 
@@ -124,7 +127,6 @@ KDNode* Mesh::build(int l, int r, int dim)
 	
 	return node;
 }
-
 void Mesh::Mesh(string file, int _num_points, int _num_faces, Vector3 move, Vector3 scale) : 
 num_points(_num_points), num_faces(_num_faces)
 {
@@ -174,7 +176,7 @@ bool inside(const Point3 &p)
 }
 void Mesh::updateInsert(KDNode *curr, const Ray3& ray, InsertInfo &info)
 {
-	if(!curr || !(curr - > box).insertRay(ray))
+	if(!curr || !(curr - > box).insertRay(ray, info))
 		return;
 	InsertInfo t_info = (curr -> face).insertRay(ray);
 	if(t_info.insert)

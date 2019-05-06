@@ -1,0 +1,1 @@
+g++ main.cpp entity.cpp scene.cpp basic.cpp -o main -g -std=c++11 -Wall

@@ -89,6 +89,7 @@ public:
 	InsertInfo(bool _insert, bool _inside = false, Ray3 _normal = Ray3()) :
 	insert(_insert), inside(_inside), normal(_normal){}
 	double distance2(const Point3 &p);
+	double distance(const Point3 &p);
 };
 
 class RandomGen

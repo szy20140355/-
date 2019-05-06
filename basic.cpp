@@ -128,3 +128,7 @@ double InsertInfo::distance2(const Point3 &p)
 {
     return (p - normal.start).length2();
 }
+double InsertInfo::distance(const Point3 &p)
+{
+    return sqrt(distance2(p));
+}
