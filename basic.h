@@ -11,7 +11,7 @@ public:
 	double x, y, z;
 	Unit3(){x = 0, y = 0, z = 0;}
 	Unit3(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
-	double getDim(int c);
+	double& getDim(int c);
 };
 
 class Point3;
@@ -22,8 +22,11 @@ class Point3 : public Unit3
 public:
 	using Unit3::Unit3;
 	Point3 operator + (const Vector3 &v) const;
+	Point3 operator + (const Point3 &p) const;
 	Point3 operator - (const Vector3 &v) const;
 	Vector3 operator - (const Point3 &p) const;
+	Point3 operator * (const double c) const;
+	Point3 operator / (const double c) const;
 	friend ostream& operator << (ostream& out, const Point3& s);
 	double dot(const Vector3 &v);
 };
@@ -72,7 +75,7 @@ public:
 	friend ostream& operator << (ostream& out, const Color& s);
 };
 
-const Color background(0, 0, 0);
+const Color background(0, 0, 0.5);
 const Color black(0, 0, 0);
 const Color white(1.0 ,1.0, 1.0);
 const Color red(1.0, 0, 0);
@@ -103,6 +106,65 @@ public:
 	{
 		return dist(gen);
 	}
+};
+
+class Transform // 对物体变换
+{
+public:
+	double mat[3][3]; // 变换矩阵
+	Point3 p0; // 原点
+	Transform();
+	void move(Vector3 v); // 平移
+	void scale(Vector3 v); // 缩放
+	void rotateX(double phi); //绕x轴旋转
+	void rotateY(double phi); //绕y轴旋转
+	void rotateZ(double phi); //绕z轴旋转
+	Point3 trans(Point3 p);
+};
+
+class Matrix3
+{
+public: 
+    double a[3][3];
+
+    Matrix3() {}
+    double algMinor(int x, int y); // 代数余子式
+    double det();
+    Matrix3 inv(double det);
+    Matrix3 operator + (const Matrix3& p);
+    Matrix3 operator - (const Matrix3& p);
+    Matrix3& operator += (const Matrix3& p);
+};
+
+class Array3
+{
+public:
+    double a[3];
+    
+    Array3() {}
+    Array3(double a0, double a1, double a2) {a[0] = a0; a[1] = a1; a[2] = a2;}
+    Matrix3 mul(Array3 v);
+    double dot(Array3 v);
+    Array3 operator - (const Array3& v);
+    Array3 operator + (const Array3& v);
+    Array3 operator * (double c);
+    friend Array3 operator * (const Matrix3& p, const Array3& v);
+};
+
+class Point2
+{
+public:
+	double x, y;
+	Point2() {}
+	Point2(double _x, double _y) : x(_x), y(_y) {}
+}
+
+class Image
+{
+public:
+    int h,w;
+    Color** pix;
+    void readImage(string path);
 };
 
 #endif // __BASIC__

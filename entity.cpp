@@ -41,7 +41,7 @@ InsertInfo Plane3::insertLight(Ray3 ray)
 }
 
 Square3::Square3(Material _compose, Color _color, Color _emit, Ray3 _normal, 
-	int _w_pixel, int _h_pixel, double _w_len, double _h_len, Ray3 _x_dir):
+	int _w_pixel, int _h_pixel, double _w_len, double _h_len, Ray3 _x_dir, bool flip_y):
 Plane3(_compose, _color, _emit, _normal),
 w_pixel(_w_pixel), h_pixel(_h_pixel), w_len(_w_len), h_len(_h_len), x_dir(_x_dir)
 {
@@ -54,17 +54,14 @@ w_pixel(_w_pixel), h_pixel(_h_pixel), w_len(_w_len), h_len(_h_len), x_dir(_x_dir
 		p_emit[i] = new Color[h_pixel];
 	}
 
-	cerr << "$$$@" << p_color[0][0] << endl;
-
 	y_dir.start = x_dir.start;
 	y_dir.dir = normal.dir ^ x_dir.dir;
+	if(flip_y) y_dir.dir = -y_dir.dir;
 	y_dir.dir.normalize();
 	dl_corner = x_dir.start;
 	ur_corner = dl_corner + x_dir.dir * w_len + y_dir.dir * h_len;
 	x_interval = w_len / w_pixel;
 	y_interval = h_len / h_pixel;
-	
-	cerr << "$$$@" << p_color[0][0] << endl;
 } 
 Square3::~Square3()
 {

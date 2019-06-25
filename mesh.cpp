@@ -1,29 +1,5 @@
 #include "mesh.h"
 
-Transform::Transform()
-{
-	memset(mat, 0, sizeof(mat));
-	mat[0][0] = mat[1][1] = mat[2][2] = 1.0;
-}
-void Transform::move(Vector3 v)
-{
-    p0 = p0 + v;
-}
-void Transform::scale(Vector3 v)
-{
-	mat[0][0] *= v.x; mat[0][1] *= v.x; mat[0][2] *= v.x;
-	mat[1][0] *= v.y; mat[1][1] *= v.y; mat[1][2] *= v.y;
-	mat[2][0] *= v.z; mat[2][1] *= v.z; mat[2][2] *= v.z;
-}
-Point3 Transform::trans(Point3 p)
-{
-	Point3 ret;
-	ret.x = mat[0][0] * p.x + mat[0][1] * p.y + mat[0][2] * p.z;
-	ret.y = mat[1][0] * p.x + mat[1][1] * p.y + mat[1][2] * p.z;
-	ret.z = mat[2][0] * p.x + mat[2][1] * p.y + mat[2][2] * p.z;
-	return ret;
-}
-
 Face::Face(Point3 *_p)
 {
 	for(int i = 0; i < 3; i++)
@@ -83,13 +59,26 @@ void ParalleBox::update(const ParalleBox &box)
 	max_coord.y = max(max_coord.y, box.max_coord.y);
 	max_coord.z = max(max_coord.z, box.max_coord.z);
 }
+bool ParalleBox::inside(Point3 p)
+{
+	if(p.x < min_coord.x || p.x > max_coord.x) return false;
+	if(p.y < min_coord.y || p.y > max_coord.y) return false;
+	if(p.z < min_coord.z || p.z > max_coord.z) return false;
+	return true;
+}
 bool ParalleBox::insertRay(Ray3 ray, InsertInfo &info)
 {
 	double t_min = -inf, t_max = inf;
+	if(inside(ray.start)) return true;
 	for(int i = 0; i < 3; i++)
 	{
-		t_min = max(t_min, (min_coord.getDim(i) - ray.start.getDim(i)) / (ray.dir.getDim(i)));
-		t_max = min(t_max, (max_coord.getDim(i) - ray.start.getDim(i)) / (ray.dir.getDim(i)));
+		double t = ray.dir.getDim(i);
+		if(fabs(t) < eps) continue;
+		double v1 = (min_coord.getDim(i) - ray.start.getDim(i)) / (ray.dir.getDim(i));
+		double v2 = (max_coord.getDim(i) - ray.start.getDim(i)) / (ray.dir.getDim(i));
+		if(v1 > v2) swap(v1, v2);
+		t_min = max(t_min, v1);
+		t_max = min(t_max, v2);
 	}
 	if(t_min >= t_max || t_max < 0) return false;
 	if(info.insert && info.distance(ray.start) < t_min) return false;
@@ -101,13 +90,22 @@ KDNode::KDNode(Face _face) : face(_face)
 	son[0] = son[1] = nullptr;
 }
 
-KDNode* Mesh::build(int l, int r, int dim)
+KDNode* Mesh::build(int l, int r, int dim, int deep)
 {
 	Point3 mean_coord(0, 0, 0);
 	for(int i = l; i < r; i++)
 		mean_coord = mean_coord + faces[i].center;
-	mean_coord = mean_coord / (r - l);
+	mean_coord = mean_coord / (double)(r - l);
 	
+	////////////////////////
+	//if(l == 12313)
+	/*{
+		cerr << "$$$ l = " << l << "  r = " << r << endl;
+		cerr << "mean_coord : " <<mean_coord << endl; 
+		fflush(stderr);
+	}*/
+	///////////////////////
+
 	int lp = l, rp = r - 1;
 	while(lp < rp)
 	{
@@ -117,25 +115,30 @@ KDNode* Mesh::build(int l, int r, int dim)
 	}
 
 	KDNode *node = new KDNode(faces[lp]);
-	if(lp > l) node -> son[0] = build(l, lp, (dim + 1) % 3);
-	if(r > rp + 1) node -> son[1] = build(rp + 1, r, (dim + 1) % 3);
+	if(lp > l) node -> son[0] = build(l, lp, (dim + 1) % 3, deep + 1);
+	if(r > rp + 1) node -> son[1] = build(rp + 1, r, (dim + 1) % 3, deep + 1);
 
 	for(int i = 0; i < 3; i++)
 		(node -> box).update(faces[lp].p[i]);
 	for(int i = 0; i < 2; i++)
-		(node -> box).update(node -> son[i] -> box);
+		if(node -> son[i])
+			(node -> box).update(node -> son[i] -> box);
 	
 	return node;
 }
-void Mesh::Mesh(string file, int _num_points, int _num_faces, Vector3 move, Vector3 scale) : 
-num_points(_num_points), num_faces(_num_faces)
+Mesh::Mesh(string s_file, int _num_points, int _num_faces, Vector3 move, Vector3 scale, 
+double rotate_x, double rotate_y, double rotate_z, Material _compose, Color _color, Color _emit) : 
+num_points(_num_points), num_faces(_num_faces), Object3(_compose, _color, _emit)
 {
 	points = new Point3[num_points];
 	faces = new Face[num_faces];
 	trans.move(move);
 	trans.scale(scale);
+	trans.rotateZ(rotate_z);
+	trans.rotateY(rotate_y);
+	trans.rotateX(rotate_x);
 
-	FILE* file = fopen(file, "r");
+	FILE* file = fopen(s_file.c_str(), "r");
 	char c;
 	Point3 tp[3];
 	for(int t_faces = 0, t_points = 0; (c = getc(file)) != EOF;)
@@ -149,18 +152,14 @@ num_points(_num_points), num_faces(_num_faces)
 		else if(c == 'f')
 		{
 			int p1, p2 ,p3;
-			fscanf(file, "%d%d%d", &p1, &p2, &p3);
-			tp[0] = points[p1]; tp[1] = points[p2]; tp[2] = points[p3];
+			fscanf(file, "%d%d%d", &p1, &p2, &p3); // 1 base
+			tp[0] = points[p1 - 1]; tp[1] = points[p2 - 1]; tp[2] = points[p3 - 1];
 			faces[t_faces] = Face(tp);
 			++t_faces;
 		}
-		else
-		{
-			for(c = getc(file); c != '\n'; c = getc(file));
-		}
 	}
 	fclose(file);
-	root = build(0, num_faces, 0);
+	root = build(0, num_faces, 0, 0);
 	
 	for(int i = 0; i < num_faces; i++)
 	{
@@ -169,14 +168,15 @@ num_points(_num_points), num_faces(_num_faces)
 		if(insert_count & 1) normal.dir = - normal.dir;
 	}
 }
-bool inside(const Point3 &p)
+bool Mesh::inside(const Point3 &p) 
 {
 	cerr << "no inside method in mesh" << endl;
 	assert(0);
+	return false;
 }
 void Mesh::updateInsert(KDNode *curr, const Ray3& ray, InsertInfo &info)
 {
-	if(!curr || !(curr - > box).insertRay(ray, info))
+	if(!curr || !(curr -> box).insertRay(ray, info))
 		return;
 	InsertInfo t_info = (curr -> face).insertRay(ray);
 	if(t_info.insert)

@@ -3,17 +3,6 @@
 
 #include "entity.h"
 
-class Transform // 对物体变换
-{
-public:
-	double mat[3][3]; // 变换矩阵
-	Point3 p0; // 原点
-	Transform();
-	void move(Vector3 v); // 平移
-	void scale(Vector3 v); // 缩放
-	Point3 trans(Point3 p);
-};
-
 class Face // Mesh中的一个面
 {
 public:
@@ -33,7 +22,8 @@ public:
 	ParalleBox(Point3 _min_coord, Point3 _max_coord) : min_coord(_min_coord), max_coord(_max_coord) {}
 	void update(const ParalleBox &box);
 	void update(Point3 p);
-	bool insertRay(Ray3 ray);
+	bool inside(Point3 p);
+	bool insertRay(Ray3 ray, InsertInfo &info);
 };
 
 class KDNode // kd树节点
@@ -46,7 +36,7 @@ public:
 	KDNode(Face _face);
 };
 
-class Mesh
+class Mesh : public Object3
 {
 public:
 	int num_points, num_faces;
@@ -56,8 +46,9 @@ public:
 	Transform trans;
 	int insert_count;
 
-	KDNode* build(int l, int r, int dim);
-	Mesh(string file, int _num_points, int _num_faces, Vector3 move, Vector3 scale);
+	KDNode* build(int l, int r, int dim, int deep);
+	Mesh(string s_file, int _num_points, int _num_faces, Vector3 move, Vector3 scale,
+	double rotate_x, double rotate_y, double rotate_z, Material _compose, Color _color, Color _emit);
 	void updateInsert(KDNode *curr, const Ray3& ray, InsertInfo &info);
 	virtual bool inside(const Point3 &p) override;
 	virtual InsertInfo insertLight(Ray3 ray) override;

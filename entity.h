@@ -36,28 +36,29 @@ public:
 	compose(_compose), color(_color), emit(_emit) {}
 
 	virtual bool inside(const Point3 &p) = 0; // p点是否在内部
-    virtual InsertInfo insertLight(Ray3 ray) = 0; // 光线与物体相交信息(第一个交点)
+    virtual InsertInfo insertLight(Ray3 ray, bool pre_inside) = 0; // 光线与物体相交信息(第一个交点)
 	virtual pair<Color, Color> getColorAndEmit(Point3 p); // 返回p点颜色和发光信息
 };
 
 class RawPlane3 // 元平面
 {
+public:
 	Ray3 normal; // 平面法向量
 	
 	RawPlane3() {}
-	RawPlane3(_normal) : normal(_normal) {}
+	RawPlane3(Ray3 _normal) : normal(_normal) {}
 
 	bool onPlane(const Point3 &p);
 	InsertInfo insertRay(Ray3 ray);
 };
 
-class Plane3 : public RawPlane3, public Object3
+class Plane3 : public Object3, public RawPlane3
 {
 public:
 
 	Plane3() {}
 	Plane3(Material _compose, Color _color, Color _emit, Ray3 _normal) :
-	Object3(_compose, _color, _emit), normal(_normal) {}
+	Object3(_compose, _color, _emit), RawPlane3(_normal) {}
 
 	virtual bool inside(const Point3 &p) override;
 	virtual InsertInfo insertLight(Ray3 ray) override;
@@ -78,7 +79,7 @@ public:
 	void setEmit(int x, int y, Color c) {p_emit[x][y] = c;}
 	bool inSquare(Point3 p);
 	Square3(Material _compose, Color _color, Color _emit, Ray3 _normal, 
-			int _w_pixel, int _h_pixel, double _w_len, double _h_len, Ray3 _x_dir);
+			int _w_pixel, int _h_pixel, double _w_len, double _h_len, Ray3 _x_dir, bool flip_y = false);
 	virtual pair<Color, Color> getColorAndEmit(Point3 p) override;
 	~Square3();
 };
