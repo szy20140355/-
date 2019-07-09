@@ -61,7 +61,7 @@ public:
 	Object3(_compose, _color, _emit), RawPlane3(_normal) {}
 
 	virtual bool inside(const Point3 &p) override;
-	virtual InsertInfo insertLight(Ray3 ray) override;
+	virtual InsertInfo insertLight(Ray3 ray, bool pre_inside) override;
 };
 
 class Square3 : public Plane3
@@ -95,7 +95,7 @@ public:
 	Vector3 normal(const Point3 &p); // p点向外法向
 	virtual bool inside(const Point3 &p) override;
 	bool onSphere(const Point3 &p);
-	virtual InsertInfo insertLight(Ray3 ray) override;
+	virtual InsertInfo insertLight(Ray3 ray, bool pre_inside) override;
 	void print() {cerr << "center :" << center << "radius : " << radius << endl;}
 };
 

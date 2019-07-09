@@ -164,7 +164,7 @@ num_points(_num_points), num_faces(_num_faces), Object3(_compose, _color, _emit)
 	for(int i = 0; i < num_faces; i++)
 	{
 		Ray3 &normal = faces[i].plane.normal;
-		insertLight(Ray3(normal.start + normal.dir * bias, normal.dir));
+		insertLight(Ray3(normal.start + normal.dir * bias, normal.dir), false);
 		if(insert_count & 1) normal.dir = - normal.dir;
 	}
 }
@@ -188,7 +188,7 @@ void Mesh::updateInsert(KDNode *curr, const Ray3& ray, InsertInfo &info)
 	updateInsert(curr -> son[0], ray, info);
 	updateInsert(curr -> son[1], ray, info);
 }
-InsertInfo Mesh::insertLight(Ray3 ray)
+InsertInfo Mesh::insertLight(Ray3 ray, bool pre_inside)
 {
 	insert_count = 0;
 	InsertInfo ret = false;

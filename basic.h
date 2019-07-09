@@ -5,6 +5,8 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+class Array3;
+
 class Unit3
 {
 public:
@@ -12,6 +14,7 @@ public:
 	Unit3(){x = 0, y = 0, z = 0;}
 	Unit3(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
 	double& getDim(int c);
+	operator Array3();
 };
 
 class Point3;
@@ -143,12 +146,15 @@ public:
     
     Array3() {}
     Array3(double a0, double a1, double a2) {a[0] = a0; a[1] = a1; a[2] = a2;}
-    Matrix3 mul(Array3 v);
-    double dot(Array3 v);
+    Matrix3 mul(const Array3& v);
+    double dot(const Array3& v);
+	double length2();
     Array3 operator - (const Array3& v);
     Array3 operator + (const Array3& v);
     Array3 operator * (double c);
     friend Array3 operator * (const Matrix3& p, const Array3& v);
+	operator Unit3() {return Unit3(a[0], a[1], a[2]);}
+	operator Point3() {return Point3(a[0], a[1], a[2]);}
 };
 
 class Point2
@@ -157,7 +163,7 @@ public:
 	double x, y;
 	Point2() {}
 	Point2(double _x, double _y) : x(_x), y(_y) {}
-}
+};
 
 class Image
 {

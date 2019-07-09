@@ -35,7 +35,7 @@ bool Plane3::inside(const Point3 &p)
 {
 	return false;
 }
-InsertInfo Plane3::insertLight(Ray3 ray) 
+InsertInfo Plane3::insertLight(Ray3 ray, bool pre_inside) 
 {
 	return insertRay(ray);
 }
@@ -115,7 +115,7 @@ bool Sphere::onSphere(const Point3 &p)
 {
 	return fabs((p - center).length2() - radius2) < eps;
 }
-InsertInfo Sphere::insertLight(Ray3 ray) 
+InsertInfo Sphere::insertLight(Ray3 ray, bool pre_inside) 
 {
 	Vector3 l = center - ray.start;
 	double tca = l.dot(ray.dir);

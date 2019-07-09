@@ -51,7 +51,7 @@ public:
 	double rotate_x, double rotate_y, double rotate_z, Material _compose, Color _color, Color _emit);
 	void updateInsert(KDNode *curr, const Ray3& ray, InsertInfo &info);
 	virtual bool inside(const Point3 &p) override;
-	virtual InsertInfo insertLight(Ray3 ray) override;
+	virtual InsertInfo insertLight(Ray3 ray, bool pre_inside) override;
 };
 
 #endif // __MESH__

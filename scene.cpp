@@ -122,6 +122,10 @@ void SceneManager::calcRayCasting()
 	int start_tim = clock();
 	int tot_block = canvas -> w_pixel * canvas -> h_pixel;
 	int curr_block = 0;
+
+	Point3 pos = canvas -> getPos(canvas -> w_pixel / 2, 10);
+	Color c = trace(Ray3(pos, camera.position - pos), 1, 1.0, false);	
+
 	for(int i = 0; i < canvas -> w_pixel; i++)
 	{
 		#pragma omp parallel for
@@ -146,10 +150,10 @@ void SceneManager::calcRayCasting()
 					Point3 tp = camera.position + (canvas -> x_dir).dir * tx + (canvas -> y_dir).dir * ty;
 					InsertInfo t_info = focal_plane.insertRay(Ray3(pos, camera.position - pos));
 					Point3 tp1 = t_info.normal.start;
-					c = c + trace(Ray3(tp, tp1 - tp), 1, 1.0) * (1.0 / ray_num);
+					c = c + trace(Ray3(tp, tp1 - tp), 1, 1.0, false) * (1.0 / ray_num);
 				}
 			#else
-				Color c = trace(Ray3(pos, camera.position - pos), 1, 1.0);
+				Color c = trace(Ray3(pos, camera.position - pos), 1, 1.0, false);
 				//Color c = trace(Ray3(camera.position, pos - camera.position), 1, 1.0);
 			#endif // DEPTH_OF_FIELD
 

@@ -6,6 +6,7 @@ double& Unit3::getDim(int c)
     if(c == 1) return y;
     return z;
 }
+Unit3::operator Array3() {return Array3(x, y, z);}
 
 Point3 Point3::operator + (const Vector3 &v) const
 {
@@ -279,12 +280,9 @@ Matrix3 Array3::mul(const Array3& v)
         ret.a[i][j] = a[i] * v.a[j];
     return ret;
 }
-double Array3::dot(const Array3& v)
+double Array3::length2()
 {
-    double ret;
-    for(int i = 0; i < 3; i++)
-        ret += a[i] * v.a[i];
-    return ret;
+    return a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
 }
 Array3 Array3::operator - (const Array3& v)
 {
@@ -310,6 +308,7 @@ Array3 Array3::operator * (double c)
 Array3 operator * (const Matrix3& p, const Array3& v)
 {
     Array3 ret;
+    ret.a[0] = ret.a[1] = ret.a[2] = 0;
     for(int i = 0; i < 3; i++)
         for(int j = 0; j < 3; j++)
             ret.a[i] += p.a[i][j] * v.a[j];
@@ -318,7 +317,7 @@ Array3 operator * (const Matrix3& p, const Array3& v)
 
 void Image::readImage(string path)
 {
-	FILE* file = fopen("image.out", "r");
+	FILE* file = fopen(path.c_str(), "r");
 	fscanf(file, "%d%d", &h, &w);
 	
     pix = new Color*[h];
